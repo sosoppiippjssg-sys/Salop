@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استوديو أدوات الصور المجاني | Web Media Studio</title>
+    <!-- CSS & Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    
+    <!-- JavaScript Libraries via Reliable CDNs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/browser.mjs" type="module"></script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 750px;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: none;
+        }
+
+        .tool-card.active {
+            display: block;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--primary);
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="range"], select, input[type="text"], input[type="color"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .preview-box {
+            margin-top: 20px;
+            text-align: center;
+            max-height: 400px;
+            overflow: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        .preview-box img, .preview-box canvas {
+            max-width: 100%;
+            max-height: 350px;
+            object-fit: contain;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #334155;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        #status-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>استوديو أدوات الصور السريع</h1>
+        <p>معالجة فورية ومجانية 100% داخل متصفحك دون الحاجة لرفع صورك لأي خادم</p>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('bg-remover')">إزالة الخلفية</button>
+        <button class="tab-btn" onclick="switchTab('compressor')">ضغط الصور</button>
+        <button class="tab-btn" onclick="switchTab('converter')">تحويل الصيغ</button>
+        <button class="tab-btn" onclick="switchTab('cropper')">قص وتعديل</button>
+        <button class="tab-btn" onclick="switchTab('watermark')">إضافة العلامة المائية</button>
+    </div>
+
+    <!-- 1. Background Remover -->
+    <div id="bg-remover" class="tool-card active">
+        <h2>أداة إزالة الخلفية (AI)</h2>
+        <div class="drop-zone" onclick="document.getElementById('bg-input').click()">
+            اختر صورة أو اسحبها هنا لتفريغ الخلفية
+            <input type="file" id="bg-input" accept="image/*" style="display:none" onchange="processBgRemoval(this)">
+        </div>
+        <div class="progress-bar" id="bg-progress-bar"><div class="progress-fill" id="bg-progress-fill"></div></div>
+        <div id="status-text"></div>
+        <div class="preview-box" id="bg-preview"></div>
+        <button class="btn" id="bg-download" style="display:none;" onclick="downloadImage('bg-preview')">تحميل الصورة الشفافة (PNG)</button>
+    </div>
+
+    <!-- 2. Image Compressor -->
+    <div id="compressor" class="tool-card">
+        <h2>أداة ضغط حجم الصور</h2>
+        <div class="drop-zone" onclick="document.getElementById('comp-input').click()">
+            اختر صورة لتقليل حجمها
+            <input type="file" id="comp-input" accept="image/*" style="display:none" onchange="compressImage(this)">
+        </div>
+        <div class="controls">
+            <label>درجة الجودة: <span id="quality-val">80%</span></label>
+            <input type="range" id="quality-range" min="10" max="100" value="80" oninput="document.getElementById('quality-val').innerText = this.value + '%'">
+        </div>
+        <div id="comp-info" style="margin-top:10px; color:var(--accent);"></div>
+        <div class="preview-box" id="comp-preview"></div>
+        <button class="btn" id="comp-download" style="display:none;" onclick="downloadImage('comp-preview')">تحميل الصورة المضغوطة</button>
+    </div>
+
+    <!-- 3. Format Converter -->
+    <div id="converter" class="tool-card">
+        <h2>أداة تحويل صيغ الصور</h2>
+        <div class="drop-zone" onclick="document.getElementById('conv-input').click()">
+            اختر صورة للتحويل
+            <input type="file" id="conv-input" accept="image/*" style="display:none" onchange="loadConvPreview(this)">
+        </div>
+        <div class="controls">
+            <label>اختر الصيغة المطلوبة:</label>
+            <select id="target-format">
+                <option value="image/png">PNG</option>
+                <option value="image/jpeg">JPG</option>
+                <option value="image/webp">WEBP</option>
+            </select>
+        </div>
+        <div class="preview-box" id="conv-preview"></div>
+        <button class="btn" id="conv-btn" onclick="convertFormat()">تحويل وتحميل الآن</button>
+    </div>
+
+    <!-- 4. Cropper & Shape Masking -->
+    <div id="cropper" class="tool-card">
+        <h2>أداة قص وتعديل أبعاد الصور</h2>
+        <div class="drop-zone" onclick="document.getElementById('crop-input').click()">
+            اختر صورة لقصها
+            <input type="file" id="crop-input" accept="image/*" style="display:none" onchange="initCropper(this)">
+        </div>
+        <div class="controls">
+            <label>شكل القص:</label>
+            <select id="crop-aspect" onchange="changeCropRatio(this.value)">
+                <option value="free">حر (Free)</option>
+                <option value="1">مربع (1:1)</option>
+                <option value="1.777">عريض (16:9)</option>
+            </select>
+        </div>
+        <div class="preview-box"><img id="crop-image" src="" style="display:none;"></div>
+        <button class="btn" onclick="cropAndDownload()">قص وتحميل النتيجة</button>
+    </div>
+
+    <!-- 5. Watermark Guard -->
+    <div id="watermark" class="tool-card">
+        <h2>أداة إضافة العلامة المائية والحقوق</h2>
+        <div class="drop-zone" onclick="document.getElementById('wm-input').click()">
+            اختر صورة لإضافة الحقوق عليها
+            <input type="file" id="wm-input" accept="image/*" style="display:none" onchange="loadWmPreview(this)">
+        </div>
+        <div class="controls">
+            <label>نص الحقوق / العلامة المائية:</label>
+            <input type="text" id="wm-text" value="© جميع الحقوق محفوظة" oninput="drawWatermark()">
+            <label>لون النص:</label>
+            <input type="color" id="wm-color" value="#ffffff" onchange="drawWatermark()">
+        </div>
+        <div class="preview-box"><canvas id="wm-canvas"></canvas></div>
+        <button class="btn" onclick="downloadCanvas('wm-canvas')">تحميل الصورة بعد إضافة الحقوق</button>
+    </div>
+
+    <script>
+        // Tab Switcher
+        function switchTab(toolId) {
+            document.querySelectorAll('.tool-card').forEach(card => card.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(toolId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Helper: Download Element Image
+        function downloadImage(containerId) {
+            const img = document.querySelector(`#${containerId} img`);
+            if (!img) return;
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = 'result.png';
+            a.click();
+        }
+
+        function downloadCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'watermarked-image.png';
+            a.click();
+        }
+
+        // 1. BG Removal Script
+        async function processBgRemoval(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const progressBar = document.getElementById('bg-progress-bar');
+            const progressFill = document.getElementById('bg-progress-fill');
+            const statusText = document.getElementById('status-text');
+            const preview = document.getElementById('bg-preview');
+            const downloadBtn = document.getElementById('bg-download');
+
+            progressBar.style.display = 'block';
+            progressFill.style.width = '20%';
+            statusText.innerText = 'جاري تهيئة نموذج الذكاء الاصطناعي والمعالجة...';
+
+            try {
+                // Using Dynamic import to bypass loading hangs
+                const { removeBackground } = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.3.0/dist/browser.mjs');
+                
+                progressFill.style.width = '60%';
+                statusText.innerText = 'جاري إزالة الخلفية بدقة...';
+
+                const blob = await removeBackground(file);
+                const url = URL.createObjectURL(blob);
+
+                progressFill.style.width = '100%';
+                statusText.innerText = 'تمت إزالة الخلفية بنجاح!';
+                preview.innerHTML = `<img src="${url}">`;
+                downloadBtn.style.display = 'block';
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = 'حدث خطأ أثناء معالجة الصورة، يرجى المحاولة بصورة أخرى.';
+            }
+        }
+
+        // 2. Compressor Script
+        async function compressImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const quality = document.getElementById('quality-range').value / 100;
+            const options = { maxSizeMB: 2, maxWidthOrHeight: 1920, useWebWorker: true, initialQuality: quality };
+
+            try {
+                const compressedFile = await imageCompression(file, options);
+                const url = URL.createObjectURL(compressedFile);
+                document.getElementById('comp-info').innerText = `الحجم الأصلي: ${(file.size/1024/1024).toFixed(2)}MB | الحجم الجديد: ${(compressedFile.size/1024/1024).toFixed(2)}MB`;
+                document.getElementById('comp-preview').innerHTML = `<img src="${url}">`;
+                document.getElementById('comp-download').style.display = 'block';
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // 3. Converter Script
+        let loadedConvImg = null;
+        function loadConvPreview(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                loadedConvImg = new Image();
+                loadedConvImg.src = e.target.result;
+                loadedConvImg.onload = () => {
+                    document.getElementById('conv-preview').innerHTML = `<img src="${e.target.result}">`;
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function convertFormat() {
+            if (!loadedConvImg) return alert('الرجاء اختيار صورة أولاً');
+            const format = document.getElementById('target-format').value;
+            const canvas = document.createElement('canvas');
+            canvas.width = loadedConvImg.width;
+            canvas.height = loadedConvImg.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(loadedConvImg, 0, 0);
+            
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL(format, 0.9);
+            a.download = `converted-image.${format.split('/')[1]}`;
+            a.click();
+        }
+
+        // 4. Cropper Script
+        let cropperObj = null;
+        function initCropper(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const img = document.getElementById('crop-image');
+            img.src = URL.createObjectURL(file);
+            img.style.display = 'block';
+            if (cropperObj) cropperObj.destroy();
+            cropperObj = new Cropper(img, { aspectRatio: NaN, viewMode: 1 });
+        }
+
+        function changeCropRatio(val) {
+            if (!cropperObj) return;
+            cropperObj.setAspectRatio(val === 'free' ? NaN : parseFloat(val));
+        }
+
+        function cropAndDownload() {
+            if (!cropperObj) return;
+            const canvas = cropperObj.getCroppedCanvas();
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'cropped-image.png';
+            a.click();
+        }
+
+        // 5. Watermark Script
+        let wmImage = null;
+        function loadWmPreview(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                wmImage = new Image();
+                wmImage.src = e.target.result;
+                wmImage.onload = () => drawWatermark();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawWatermark() {
+            if (!wmImage) return;
+            const canvas = document.getElementById('wm-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = wmImage.width;
+            canvas.height = wmImage.height;
+
+            ctx.drawImage(wmImage, 0, 0);
+            
+            const text = document.getElementById('wm-text').value;
+            const color = document.getElementById('wm-color').value;
+
+            ctx.font = `${canvas.width / 20}px Cairo`;
+            ctx.fillStyle = color;
+            ctx.textAlign = 'right';
+            ctx.fillText(text, canvas.width - 20, canvas.height - 30);
+        }
+    </script>
+</body>
+</html>
